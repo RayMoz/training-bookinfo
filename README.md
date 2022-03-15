@@ -2,10 +2,8 @@
 A small µ-service based demo app
 
 # Bookinfo Training Setup
-
-In order to train agent setup and configuration we can use the Bookinfo app by Istio: [https://github.com/istio/istio.git](https://github.com/istio/istio.git)
-
-Under samples/bookinfo we find a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
+Originally used to demo and test Istio service meshes, the bookinfo app is ideal to train Instana agent setup.
+It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
 
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
 The later is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
@@ -13,48 +11,47 @@ The later is ideal to create a situation that we have usually at customers. A re
 ## The setup
 
 Make sure docker is installed
+also install `docker-compose`
+```yaml
+apt install docker-compose
+```
 
 Clone the repo
 
 ```yaml
-git clone [https://github.com/istio/istio.git](https://github.com/istio/istio.git)
+git clone [https://github.com/RayMoz/training-bookinfo.git](https://github.com/RayMoz/training-bookinfo.git)
 ```
 
 Go to the bookinfo sample
 
 ```yaml
-cd istio/samples/bookinfo/src
+cd training-bookinfo
 ```
 
-### Adjust the settings for MySQL
-
-Per default MySQL 8.0 is used which needs a special driver for the Instana agent. Lets just change the version of MySQL in the dockerfile to 5.7.
+### Run the build-services script with a repo name and a version tag
 
 ```yaml
-cd mysql
-vi Dockerfile
-replace 8.0.20 with 5.7 in the file
-```
-
-Run the build-services script with a repo name and a version tag
-
-```yaml
-
-cd ..
-./build-services.sh 1.0 instana-test
+cd src
+./build-services.sh 1.0 stan
 ```
 
 This will create all the necessary docker images
 
-### Put in the docker-compose.yaml
+### Adjust the .env file
+Change the repo to the name you picked during the build process, e.g. *stan*
 
-You can put the file anywhere you like, but ideally place it in the samples/bookinfo directory
+```yaml
+cd ..
+vi .env
+```
+### Start up the app
+The docker-compose.yaml is ready to start. When using docker-compose it will read the .env file automatically using the correct images.
 
 ```yaml
 version: '3'
 services:
   productpage:
-    image: instana-test/bookinfo/examples-bookinfo-productpage-v1:latest
+    image: ${REPO}/examples-bookinfo-productpage-v1:latest
     networks:
       - bookinfo-network
     healthcheck:
@@ -70,7 +67,7 @@ services:
     ports:
       - "9080:9080"
   mysqldb:
-    image: instana-test/bookinfo/examples-bookinfo-mysqldb:latest
+    image: ${REPO}/examples-bookinfo-mysqldb:latest
     cap_add:
       - NET_ADMIN
     networks:
@@ -80,7 +77,7 @@ services:
     logging:
       <<: *logging
   ratings:
-    image: instana-test/bookinfo/examples-bookinfo-ratings-v2:latest
+    image: ${REPO}/examples-bookinfo-ratings-v2:latest
     environment:
       SERVICE_VERSION: v2
       DB_TYPE: mysql
@@ -101,7 +98,7 @@ services:
     logging:
       <<: *logging
   reviews:
-    image: instana-test/bookinfo/examples-bookinfo-reviews-v3:latest
+    image: ${REPO}/examples-bookinfo-reviews-v3:latest
     networks:
       - bookinfo-network
     healthcheck:
@@ -112,7 +109,7 @@ services:
     logging:
       <<: *logging
   details:
-    image: instana-test/bookinfo/examples-bookinfo-details-v1:latest
+    image: ${REPO}/examples-bookinfo-details-v1:latest
     networks:
       - bookinfo-network
     healthcheck:
@@ -190,7 +187,7 @@ Reason: the HOST_IP is changed in the docker-compose.yaml file and we need to ad
 
 ```yaml
 ratings:
-    image: instana-test/bookinfo/examples-bookinfo-ratings-v2:latest
+    image: ${REPO}/examples-bookinfo-ratings-v2:latest
     environment:
       SERVICE_VERSION: v2
       DB_TYPE: mysql
