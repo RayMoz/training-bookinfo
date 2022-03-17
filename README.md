@@ -258,8 +258,9 @@ After applying those changes you need to rebuild container and start it again. G
 The problem with the MySQL monitoring is in our case, that it is not using the standard root login but has actually a password assigned.
 No problem, we can configure the agent with the MySQL credentials in the *configuration.yaml* file.
 But, wait a second, the agent is running in a container. How can I edit the file? We actually can not edit the standard configuration.yaml.
-But we can pass a credential file via a volume mount during container startup.
-Here is the content of the file, let's call it *configuration-mysql.yqml*
+But we can copy a configuration file via `docker cp` to the running container.
+Or use a volume mount during container startup, but that requires a complete container restart.
+Here is the content of the file, let's call it *configuration-mysql.yaml*
 
 ```yaml
 # Mysql
@@ -267,21 +268,24 @@ com.instana.plugin.mysql:
   user: 'root'
   password: 'password'
 ```
+Now let's use the `docker cp`
+```bash
+docker cp configuration-mysql.yaml {container-id}:/opt/instana/agent/etc/instana/configuration-mysql.yaml
+```
+That's it.
+Look for this line in the agent.log: `Parsed configuration file /opt/instana/agent/etc/instana/configuration-mysql.yaml`
+The file is hot-read and the credentials are applied immediately.
 
-We just need to restart the agent container with 1 more option to mount the file into the filesystem of the container.
+You can also mount the file into the filesystem of the container during container startup.
+The container needs to be completely restarted though which can be timeconsuming.
 
 ```bash
 --volume {your-local-path}/configuration-mysql.yaml:/opt/instana/agent/etc/instana/configuration-mysql.yaml
 ```
-
-Look for this line in the agent.log: `Parsed configuration file /opt/instana/agent/etc/instana/configuration-mysql.yaml`
-
-*** The file is NOT hot read when mounted using a volume mount. This means it is important to add this configuration as early as possible because you need to redeploy the agent container after a change !! ***
-
 ### WebSphere Liberty application server
 This one is automatically found and instrumented at runtime. Though it uses a IBM J9 JVM which usually needs an extra configuration to enable tracing.
-Here is an excerpt of the documentatio that explains why this works out of the box:
-```
-Optional: Configure the ws-javaagent.jar file with the -javaagent JVM option. The ws-javaagent.jar file is in the ${wlp.install.dir}/bin/tools directory of the Liberty installation. You are advised to configure the ws-javaagent.jar file, but it is not mandatory unless you use capabilities of the server that require it, such as monitoring or trace. If you contact IBM® support, you might need to provide trace, and if so, you must start the server with the ws-javaagent.jar file, even if you do not normally use it.
-```
+Here is an excerpt of the documentation that explains why this works out of the box:
+
+> Optional: Configure the ws-javaagent.jar file with the -javaagent JVM option. The ws-javaagent.jar file is in the ${wlp.install.dir}/bin/tools directory of the Liberty installation. You are advised to configure the ws-javaagent.jar file, but it is not mandatory unless you use capabilities of the server that require it, such as monitoring or trace. If you contact IBM® support, you might need to provide trace, and if so, you must start the server with the ws-javaagent.jar file, even if you do not normally use it.
+
 https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-embedding-server-in-your-applications
