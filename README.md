@@ -8,6 +8,8 @@ It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB an
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
 The later is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
 
+When you follow it step by step you'll be facing situations which are typical for an initial agent deployment of Instana; e.g. a MySQL DB which needs extra credentials or a node.js process which needs attention before it is fully traced.
+
 ## The setup
 
 Make sure docker is installed
@@ -19,7 +21,7 @@ apt install docker-compose
 Clone the repo
 
 ```yaml
-git clone [https://github.com/RayMoz/training-bookinfo.git](https://github.com/RayMoz/training-bookinfo.git)
+git clone https://github.com/RayMoz/training-bookinfo.git
 ```
 
 Go to the bookinfo sample
@@ -32,13 +34,14 @@ cd training-bookinfo
 
 ```yaml
 cd src
-./build-services.sh 1.0 stan
+./build-services.sh 1.0 {your-name}
 ```
 
-This will create all the necessary docker images
+This will create all the necessary docker images and store them locally.
 
 ### Adjust the .env file
-Change the repo to the name you picked during the build process, e.g. *stan*
+Change the repo to the name you picked during the build process, e.g. *your-name*.
+This is important to actually match the image names in the docker-compose file with the names of the images you just created.
 
 ```yaml
 cd ..
@@ -133,11 +136,12 @@ docker-compose up -d
 // this will bring the prompt back and run the system detached from the terminal
 ```
 
-You can reach the system now with **http://{hostname}:9080**
+You can reach the bookinfo app now with **http://{hostname}:9080**
 
 ### Install Instana agent as docker container
 
 Just use the docker run command from the Instana instance “deploy agents” wizard
+When you use a personal ZONE attribute (just enter it in the field in the wizard) it makes it easier for you to find your machine in the Instana UI.
 
 ### What do we see once the agent is running:
 
@@ -177,7 +181,7 @@ var http = require('http')
 var dispatcher = require('httpdispatcher')
 ```
 
-rebuild docker container - run
+rebuild docker container - and restart the app with docker-compose.
 
 **Still not seeing any data: Let’s check the logs of the app (docker logs {container ID})**
 
@@ -217,6 +221,8 @@ Add the INSTANA_AGENT_HOST ENV to the docker-compose.yaml for the ratings servic
 
 ### Python app
 
+Todo: Check if autotrace works when opentracing is not yet part of the requirements.txt
+
 Here we have a conflict with the already existing opentracing and jaeger client dependencies. Installing the pip won’t work as Instana needs a more recent opentracing lib while the jaeger client needs an older one.
 
 Solution:
@@ -228,15 +234,11 @@ Without Jaeger and the dependencies on old packages the auto instrumentation wor
 
 ### Ruby app
 
-Problem here is that the container is using a slim Ruby runtime which can not install the Instana gem.
-
-Solution: Rebuild container with a full Ruby runtime by changing the image in the Dockerfile
+Ruby needs an Instana gem to be installed for the full tracing capability. 2 Changes are required.
+1. Add the gem to the runtime by adding the RUN command in the Dockerfile
+2. Add the require statement to the Ruby file (in this case details.rb)
 
 ```docker
-FROM ruby:2.7.1-slim
-# change to
-FROM ruby:2.7
-
 # add after the WORKDIR directive
 RUN gem install instana
 ```
@@ -249,5 +251,37 @@ require 'json'
 require 'net/http'
 require 'instana' # new to include the tracing
 ```
+After applying those changes you need to rebuild container and start it again. Give it a new version tag (e.g. 1.0.1) and also a latest tag.
 
-Now rebuild the container
+### MySQL - credentials missing
+
+The problem with the MySQL monitoring is in our case, that it is not using the standard root login but has actually a password assigned.
+No problem, we can configure the agent with the MySQL credentials in the *configuration.yaml* file.
+But, wait a second, the agent is running in a container. How can I edit the file? We actually can not edit the standard configuration.yaml.
+But we can pass a credential file via a volume mount during container startup.
+Here is the content of the file, let's call it *configuration-mysql.yqml*
+
+```yaml
+# Mysql
+com.instana.plugin.mysql:
+  user: 'root'
+  password: 'password'
+```
+
+We just need to restart the agent container with 1 more option to mount the file into the filesystem of the container.
+
+```bash
+--volume {your-local-path}/configuration-mysql.yaml:/opt/instana/agent/etc/instana/configuration-mysql.yaml
+```
+
+Look for this line in the agent.log: `Parsed configuration file /opt/instana/agent/etc/instana/configuration-mysql.yaml`
+
+*** The file is NOT hot read when mounted using a volume mount. This means it is important to add this configuration as early as possible because you need to redeploy the agent container after a change !! ***
+
+### WebSphere Liberty application server
+This one is automatically found and instrumented at runtime. Though it uses a IBM J9 JVM which usually needs an extra configuration to enable tracing.
+Here is an excerpt of the documentatio that explains why this works out of the box:
+```
+Optional: Configure the ws-javaagent.jar file with the -javaagent JVM option. The ws-javaagent.jar file is in the ${wlp.install.dir}/bin/tools directory of the Liberty installation. You are advised to configure the ws-javaagent.jar file, but it is not mandatory unless you use capabilities of the server that require it, such as monitoring or trace. If you contact IBM® support, you might need to provide trace, and if so, you must start the server with the ws-javaagent.jar file, even if you do not normally use it.
+```
+https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-embedding-server-in-your-applications
