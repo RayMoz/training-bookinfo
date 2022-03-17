@@ -17,7 +17,6 @@
 require 'webrick'
 require 'json'
 require 'net/http'
-require 'instana'
 
 if ARGV.length < 1 then
     puts "usage: #{$PROGRAM_NAME} port"
