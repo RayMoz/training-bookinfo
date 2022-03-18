@@ -57,6 +57,7 @@ server.mount_proc '/details' do |req, res|
 end
 
 # TODO: provide details on different books.
+::Instana.tracer.trace(:get_details, { :helpful_kvs => @user.id }) do
 def get_book_details(id, headers)
     if ENV['ENABLE_EXTERNAL_BOOK_SERVICE'] === 'true' then
       # the ISBN of one of Comedy of Errors on the Amazon
@@ -76,6 +77,7 @@ def get_book_details(id, headers)
         'ISBN-10' => '1234567890',
         'ISBN-13' => '123-1234567890'
     }
+end
 end
 
 def fetch_details_from_external_service(isbn, id, headers)
@@ -188,3 +190,8 @@ def get_forward_headers(request)
 end
 
 server.start
+
+::Instana.tracer.trace(:mywork, { :helpful_kvs => @user.id }) do
+  # The code to be instrumented
+  @id = User.find_by_name('john.smith')
+ end
