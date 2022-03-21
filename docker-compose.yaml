@@ -1,7 +1,7 @@
 version: '3'
 services:
   productpage:
-    image: ${REPO}/bookinfo/examples-bookinfo-productpage-v1:latest
+    image: ${REPO}/examples-bookinfo-productpage-v1:latest
     networks:
       - bookinfo-network
     healthcheck:
@@ -17,7 +17,7 @@ services:
     ports:
       - "9080:9080"
   mysqldb:
-    image: ${REPO}/bookinfo/examples-bookinfo-mysqldb:latest
+    image: ${REPO}/examples-bookinfo-mysqldb:latest
     cap_add:
       - NET_ADMIN
     networks:
@@ -27,7 +27,7 @@ services:
     logging:
       <<: *logging
   ratings:
-    image: ${REPO}/bookinfo/examples-bookinfo-ratings-v2:latest
+    image: ${REPO}/examples-bookinfo-ratings-v2:latest
     environment:
       SERVICE_VERSION: v2
       DB_TYPE: mysql
@@ -48,7 +48,7 @@ services:
     logging:
       <<: *logging
   reviews:
-    image: ${REPO}/bookinfo/examples-bookinfo-reviews-v3:latest
+    image: ${REPO}/examples-bookinfo-reviews-v3:latest
     networks:
       - bookinfo-network
     healthcheck:
@@ -59,7 +59,7 @@ services:
     logging:
       <<: *logging
   details:
-    image: ${REPO}/bookinfo/examples-bookinfo-details-v1:latest
+    image: ${REPO}/examples-bookinfo-details-v1:latest
     networks:
       - bookinfo-network
     healthcheck:
