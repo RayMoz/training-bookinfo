@@ -38,15 +38,15 @@ try:
 except ImportError:
     # Python 2
     import httplib as http_client
-http_client.HTTPConnection.debuglevel = 1
+# http_client.HTTPConnection.debuglevel = 1
 
 app = Flask(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 requests_log = logging.getLogger("requests.packages.urllib3")
-requests_log.setLevel(logging.DEBUG)
+requests_log.setLevel(logging.INFO)
 requests_log.propagate = True
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
-app.logger.setLevel(logging.DEBUG)
+app.logger.setLevel(logging.INFO)
 
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
