@@ -1,42 +1,41 @@
-require 'rack'
-require 'json'
-#require 'instana'
+# details.rb
+# Copyright IBM & Istio Authors
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+##############################################################################
+# Very rough implementation of a REST API for demo purposes of Instana tracing
+# Additions very welcome
 
-PAGES = {
-  "/" => "Hi, welcome to the home page!",
-  "/about" => "About us: we are http hackers.",
-  "/health" => "Details is healthy",
-  "/details" => "Dummy",
-  "/details/0" => "Dummy"
-}
-PAGE_NOT_FOUND = "Sorry, there's nothing here."
+require 'sinatra'
+# remove the comment to enable instana tracing and monitoring
+# require 'instana'
 
-class App
-  def call(env)
-    response_headers = {}
-    response_body = []
+# needed for the docker image to bind to any IP address not onyl 127.0.0.1
+set :bind, '0.0.0.0'
+set :port, 9080
 
-    ### routing
-
-    path = env["PATH_INFO"]
-    if PAGES.keys.include? path
-      status = 200
-      if path === "/details/0" then
-        response_body.push get_book_details(0).to_json
-      else
-        response_body.push PAGES[path]
-
-      end
-    else
-      status = 404
-      response_body.push PAGE_NOT_FOUND
-    end
-
-    ### return the response object
-
-    [status, response_headers, response_body]
-  end
+get '/' do
+  'Awesome!'
 end
+
+get '/details/0' do
+  get_book_details(0).to_json
+end
+
+get '/health' do
+  "I'm healthy!"
+end
+
 
 def get_book_details(id)
     if ENV['ENABLE_EXTERNAL_BOOK_SERVICE'] === 'true' then
@@ -58,47 +57,3 @@ def get_book_details(id)
         'ISBN-13' => '123-1234567890'
     }
 end
-
-def fetch_details_from_external_service(isbn, id)
-    uri = URI.parse('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)
-    http = Net::HTTP.new(uri.host, ENV['DO_NOT_ENCRYPT'] === 'true' ? 80:443)
-    http.read_timeout = 5 # seconds
-
-    # DO_NOT_ENCRYPT is used to configure the details service to use either
-    # HTTP (true) or HTTPS (false, default) when calling the external service to
-    # retrieve the book information.
-    #
-    # Unless this environment variable is set to true, the app will use TLS (HTTPS)
-    # to access external services.
-    unless ENV['DO_NOT_ENCRYPT'] === 'true' then
-      http.use_ssl = true
-    end
-
-    request = Net::HTTP::Get.new(uri.request_uri)
-    # headers.each { |header, value| request[header] = value }
-
-    response = http.request(request)
-
-    json = JSON.parse(response.body)
-    book = json['items'][0]['volumeInfo']
-
-    language = book['language'] === 'en'? 'English' : 'unknown'
-    type = book['printType'] === 'BOOK'? 'paperback' : 'unknown'
-    isbn10 = get_isbn(book, 'ISBN_10')
-    isbn13 = get_isbn(book, 'ISBN_13')
-
-    return {
-        'id' => id,
-        'author': book['authors'][0],
-        'year': book['publishedDate'],
-        'type' => type,
-        'pages' => book['pageCount'],
-        'publisher' => book['publisher'],
-        'language' => language,
-        'ISBN-10' => isbn10,
-        'ISBN-13' => isbn13
-  }
-
-end
-
-Rack::Handler::WEBrick.run(App.new, :BindAddress => '*', :Port => 9080)

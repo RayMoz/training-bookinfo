@@ -24,6 +24,8 @@ ENV ENABLE_EXTERNAL_BOOK_SERVICE ${enable_external_book_service:-false}
 EXPOSE 9080
 WORKDIR /opt/microservices
 
-RUN gem install rack
+RUN gem install sinatra
+# remove the comment to load the instana gem
+# RUN gem install instana
 
 CMD ["ruby", "details.rb"]

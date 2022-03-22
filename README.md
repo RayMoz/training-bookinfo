@@ -131,9 +131,11 @@ Now you can fire up the app with
 
 ```yaml
 docker-compose up
-//or
+```
+or in detached mode to get back to the prompt
+
+```yaml
 docker-compose up -d
-// this will bring the prompt back and run the system detached from the terminal
 ```
 
 You can reach the bookinfo app now with **http://{hostname}:9080**
@@ -143,21 +145,56 @@ You can reach the bookinfo app now with **http://{hostname}:9080**
 Just use the docker run command from the Instana instance “deploy agents” wizard
 When you use a personal ZONE attribute (just enter it in the field in the wizard) it makes it easier for you to find your machine in the Instana UI.
 
+```bash
+sudo docker run \
+   --detach \
+   --name instana-agent \
+   --volume /var/run:/var/run \
+   --volume /run:/run \
+   --volume /dev:/dev:ro \
+   --volume /sys:/sys:ro \
+   --volume /var/log:/var/log:ro \
+   --privileged \
+   --net=host \
+   --pid=host \
+   --env="INSTANA_AGENT_ENDPOINT=ingress-green-saas.instana.io" \
+   --env="INSTANA_AGENT_ENDPOINT_PORT=443" \
+   --env="INSTANA_AGENT_KEY={your agent key}" \
+   --env="INSTANA_DOWNLOAD_KEY={your agent key}" \
+   --env="INSTANA_AGENT_ZONE=myzone" \
+   icr.io/instana/agent
+```
+
 ### What do we see once the agent is running:
 
 Host info works fine, containers are discovered, Java app starts reporting nicely (WebSphere Liberty), but we miss info for:
 
-- node.js app
 - Python app
+- node.js app
 - Ruby app
 - MySQL
 
-The UI gives us already links to the troubleshooting section what we need to do
+The UI gives us already links to the troubleshooting section what we need to do.
 
-So we need to do some adjusting
+So we need to do some adjusting to get the full tracing experience.
+
+### Python app
+
+There is already info about the Python process but maybe no tracing yet.
+In order to turn this on we can simply set an environment variable:
+***AUTOWRAPT_BOOTSTRAP=instana***
+Documentation: https://www.ibm.com/docs/en/obi/current?topic=technologies-monitoring-python-instana-python-package#manual-installation
+
+We set this in the Dockerfile, rebuild the container and then start it up again using docker-compose. This will only affect the changed components. No need to shut everything down before.
+
+```bash
+docker-compose up -d
+```
+Hint: Do not run the test in the Dockerfile as it expects the opentracing instrumentation.
 
 ### node.js
 
+Instana tells us that there is a node process but we need to do some manual work to see the details and traces.
 Here we need to add the instrumentation to the code (one line) and add the package to the package.json file:
 
 ```yaml
@@ -216,23 +253,17 @@ ratings:
 ```
 
 Add the INSTANA_AGENT_HOST ENV to the docker-compose.yaml for the ratings service
+172.17.0.1 is the default Docker host IP which we use here.
+Apply the changes by running docker-compose again.
+Now we check if it works by looking into the logs again.
 
-172.17.0.1 is the default Docker host IP which we use here and it works
-
-### Python app
-
-Todo: Check if autotrace works when opentracing is not yet part of the requirements.txt
-
-Here we have a conflict with the already existing opentracing and jaeger client dependencies. Installing the pip won’t work as Instana needs a more recent opentracing lib while the jaeger client needs an older one.
-
-Solution:
-Remove the opentracing instrumentation and clear the jaeger-client dependency, also remove gevent and greenlet (not used at all) from the requirements.txt
-
-Do not run the test in the Dockerfile as it expects the opentracing instrumentation.
-
-Without Jaeger and the dependencies on old packages the auto instrumentation works though we don’t see any traces yet.
+After some seconds we can see the message that the sensor is ready and reporting.
 
 ### Ruby app
+
+Our app is a standard REST service based on the Sinatra framework. It is supereasy to *instanafy* it.
+
+For Ruby app we see just the process but no further info at first.
 
 Ruby needs an Instana gem to be installed for the full tracing capability. 2 Changes are required.
 1. Add the gem to the runtime by adding the RUN command in the Dockerfile
@@ -246,12 +277,14 @@ RUN gem install instana
 Add require statement to details.rb
 
 ```ruby
-require 'webrick'
+require 'rack'
 require 'json'
-require 'net/http'
 require 'instana' # new to include the tracing
 ```
 After applying those changes you need to rebuild container and start it again. Give it a new version tag (e.g. 1.0.1) and also a latest tag.
+Then run docker-compose again.
+
+Et voilá - we see the Ruby info and traces.
 
 ### MySQL - credentials missing
 
@@ -287,5 +320,5 @@ This one is automatically found and instrumented at runtime. Though it uses a IB
 Here is an excerpt of the documentation that explains why this works out of the box:
 
 > Optional: Configure the ws-javaagent.jar file with the -javaagent JVM option. The ws-javaagent.jar file is in the ${wlp.install.dir}/bin/tools directory of the Liberty installation. You are advised to configure the ws-javaagent.jar file, but it is not mandatory unless you use capabilities of the server that require it, such as monitoring or trace. If you contact IBM® support, you might need to provide trace, and if so, you must start the server with the ws-javaagent.jar file, even if you do not normally use it.
-
+If the server.xml file also has the feature `monitor-1.0` enabled, we can see threadpool info, etc. from this WebSphere Liberty instance.
 https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-embedding-server-in-your-applications
