@@ -277,8 +277,7 @@ RUN gem install instana
 Add require statement to details.rb
 
 ```ruby
-require 'rack'
-require 'json'
+require 'sinatra'
 require 'instana' # new to include the tracing
 ```
 After applying those changes you need to rebuild container and start it again. Give it a new version tag (e.g. 1.0.1) and also a latest tag.
