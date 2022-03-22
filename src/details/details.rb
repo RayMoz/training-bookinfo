@@ -33,7 +33,7 @@ get '/details/0' do
 end
 
 get '/health' do
-  "I'm healthy!"
+  'I´m healthy!'
 end
 
 
