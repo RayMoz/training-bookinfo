@@ -10,10 +10,18 @@ The later is ideal to create a situation that we have usually at customers. A re
 
 When you follow it step by step you'll be facing situations which are typical for an initial agent deployment of Instana; e.g. a MySQL DB which needs extra credentials or a node.js process which needs attention before it is fully traced.
 
+## Machine
+
+Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example a T3 Medium box in AWS EC2.
+The `apt install` commands that you see throughout hints that this was developed on an Ubuntu system.
+
 ## The setup
 
-Make sure docker is installed
-also install `docker-compose`
+Make sure docker is installed. Find the docs and the convenience script here: https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
+Check that you are in the right section for your Linux distro of choice.
+
+Also install `docker-compose`
+
 ```yaml
 apt install docker-compose
 ```
