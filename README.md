@@ -2,7 +2,7 @@
 This repository was created to accompany the Instana education. It provides a small µ-service based demo app to be installed and configured for Instana observability.
 
 # Bookinfo Training Setup
-Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn Instana agent setup and basic troboolshooting.
+Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn Instana agent setup and basic troubleshooting.
 It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
 
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
