@@ -1,18 +1,19 @@
 # training-bookinfo
-A small µ-service based demo app
+This repository was created to accompany the Instana education. It provides a small µ-service based demo app to be installed and configured for Instana observability.
 
 # Bookinfo Training Setup
-Originally used to demo and test Istio service meshes, the bookinfo app is ideal to train Instana agent setup.
+Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn Instana agent setup and basic troboolshooting.
 It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
 
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
-The later is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
+The latter is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
 
 When you follow it step by step you'll be facing situations which are typical for an initial agent deployment of Instana; e.g. a MySQL DB which needs extra credentials or a node.js process which needs attention before it is fully traced.
 
 ## Machine
 
-Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example a T3 Medium box in AWS EC2.
+Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example cx2-2x4 profile in IBM Cloud VPC or a t3 medium box in AWS EC2. You can also easily use a local VM running on your workstation (rememeber to setup Internet connectivity).
+
 The `apt install` commands that you see throughout hints that this was developed on an Ubuntu system.
 
 ## The setup
