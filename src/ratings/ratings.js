@@ -12,6 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+require('@instana/collector')();
+// added Instana agent / instrumentation hook
+
 var http = require('http')
 var dispatcher = require('httpdispatcher')
 
