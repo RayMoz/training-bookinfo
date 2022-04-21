@@ -7,7 +7,7 @@ set -o errexit
 
 if [ "$#" -ne 1 ]; then
     echo "Incorrect parameter"
-    echo "Usage: build-services.sh <prefix>"
+    echo "Usage: fastforward.sh <prefix>"
     exit 1
 fi
 
@@ -32,7 +32,7 @@ cp ratings-instana.js ratings.js
 # build containers
 
 cd ..
-./build-service.sh 1.0 ${PREFIX}
+./build-services.sh 1.0 ${PREFIX}
 
 # update docker-compose file
 cd ..
