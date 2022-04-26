@@ -27,7 +27,12 @@ COPY templates /opt/microservices/templates
 COPY static /opt/microservices/static
 COPY requirements.txt /opt/microservices/
 
-ENV AUTOWRAPT_BOOTSTRAP instana
+## Enable only if needed
+# ENV AUTOWRAPT_BOOTSTRAP instana
+
+### Set a distinct service name via environment variable on the process
+### This needs a rebuilding of the container though or a restart of the process
+# ENV INSTANA_SERVICE_NAME '{my-name} Productpage'
 
 ARG flood_factor
 ENV FLOOD_FACTOR ${flood_factor:-0}

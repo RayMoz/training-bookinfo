@@ -14,30 +14,42 @@ fi
 PREFIX=$1
 
 # The Ruby part
+echo "Preparing Ruby"
 cd ../src/details
 cp details-instana.rb details.rb
 cp Dockerfile-instana Dockerfile
 
 # Python
+echo "Preparing Python"
 cd ../productpage
 cp requirements-instana.txt requirements.txt
 cp Dockerfile-instana Dockerfile
 
 # node.js
-
+echo "Preparing node.js"
 cd ../ratings
 cp package-instana.json package.json
 cp ratings-instana.js ratings.js
 
 # build containers
-
+echo "Building containers"
 cd ..
 ./build-services.sh 1.0 ${PREFIX}
 
 # update docker-compose file
+echo "Updating docker-compose file"
 cd ..
 cp docker-compose-instana.yaml docker-compose.yaml
 
-# start up everything
+## create new .env file with the tag and the prefix given here
+echo "Updating .env file"
+cat <<EOF > .env
+# environment file for docker-compose
+REPO=${PREFIX}
+TAG=1.0
+EOF
 
-echo "Ready. Now please add ${PREFIX} into the .env file in the home directory. \nDone setting up the environment. Have fun configuring the services."
+# start up everything
+docker-compose up -d
+
+echo "Ready. Done setting up the environment. Please deploy the agent now and then: Have fun configuring the services."

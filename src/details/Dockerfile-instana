@@ -23,6 +23,10 @@ ENV ENABLE_EXTERNAL_BOOK_SERVICE ${enable_external_book_service:-false}
 
 ENV INSTANA_DEBUG true
 
+### Set a distinct service name via environment variable on the process
+### This needs a rebuilding of the container though or a restart of the process
+# ENV INSTANA_SERVICE_NAME = 'Rainers Details'
+
 EXPOSE 9080
 WORKDIR /opt/microservices
 RUN gem install instana
