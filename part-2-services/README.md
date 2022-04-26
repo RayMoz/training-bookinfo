@@ -3,7 +3,7 @@ How to customize the Instana experience
 
 ## The setup (the same as for the 1st part)
 
-Make sure docker is installed. Find the docs and the convenience script here: https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
+Make sure docker is installed. Find the docs and the convenience script here: [The Ubuntu docker install convenience script](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
 Check that you are in the right section for your Linux distro of choice.
 
 Also install `docker-compose`
@@ -80,7 +80,7 @@ Let's do this and see what side-effect we get with this approach.
 
 ### Service Name via env Variable
 If you want to name a service in a distinct way for a specific process the ENV Variable is the way to go.
-This documentation provides you an overview:  [Servicename via Variable](https://www.ibm.com/docs/en/obi/current?topic=applications-services#specify-the-instanaservicename-environment-variable "Instana Documentation")
+This documentation provides you an overview:  [Servicename via Variable](https://www.ibm.com/docs/en/obi/current?topic=applications-services#specify-the-instanaservicename-environment-variable)
 
 Let's do this for the Python service productpage.
 We need to add the env variable to the Dockerfile and rebuild the container as the process needs to be restarted to pick up the variable.
@@ -92,7 +92,7 @@ For development purposes e.g. canary builds you may want to create them automati
 You can use the REST API for that.
 ***Be careful though ***
 After you are done please delete the AP again otherwise it will sit there forever but not getting any data and just block the view.
-You can find the complete REST API documentation here: https://instana.github.io/openapi/#operation/getApplicationConfigs
+You can find the complete REST API documentation here: [REST API docs: Get Application Configs](https://instana.github.io/openapi/#operation/getApplicationConfigs)
 
 ```bash
 # REST API example - please mind the API token. It is redacted here for security purposes.
