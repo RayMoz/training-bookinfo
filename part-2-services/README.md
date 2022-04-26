@@ -75,7 +75,7 @@ Et voilá the node.js app now has a name in the infrastructure stack.
 And we can use it for filtering.
 
 ### Servicename via custom rule
-As we have a node.ja App name now we can we use a custom rule to redefine the service name.
+As we have a node.js App name now we can we use a custom rule to redefine the service name.
 Let's do this and see what side-effect we get with this approach.
 
 ### Service Name via env Variable
