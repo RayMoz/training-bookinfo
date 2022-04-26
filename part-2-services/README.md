@@ -78,6 +78,9 @@ And we can use it for filtering.
 As we have a node.js App name now we can we use a custom rule to redefine the service name.
 Let's do this and see what side-effect we get with this approach.
 
+We changed it for ALL node.js apps, not just ours :-O That may surprise colleagues who are not aware of that change.
+So better to use a different approach that is more controllable.
+
 ### Service Name via env Variable
 If you want to name a service in a distinct way for a specific process the ENV Variable is the way to go.
 This documentation provides you an overview:  [Servicename via Variable](https://www.ibm.com/docs/en/obi/current?topic=applications-services#specify-the-instanaservicename-environment-variable)
