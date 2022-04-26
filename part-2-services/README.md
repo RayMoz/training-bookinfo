@@ -88,6 +88,11 @@ This documentation provides you an overview:  [Servicename via Variable](https:/
 Let's do this for the Python service productpage.
 We need to add the env variable to the Dockerfile and rebuild the container as the process needs to be restarted to pick up the variable.
 There is a prepared Dockerfile (Dockerfile-instana) which you can copy to Dockerfile and uncomment the line with the ENV variable. Replace {yourname} with your name and rebuild the container (like before).
+If you want to do it manually, here is the line.
+```yaml
+ENV INSTANA_SERVICE_NAME '{my-name} Productpage'
+```
+This approach works for every process which runs a service monitored by Instana.
 
 ### Let's build an application perspective automatically via REST
 Creating an AP is easy in the UI and I think pretty intuitive.
