@@ -33,7 +33,7 @@ cp ratings-base.js ratings.js
 # build containers
 echo "Rebuilding containers"
 cd ..
-./build-service.sh 1.0 ${PREFIX}
+./build-services.sh 1.0 ${PREFIX}
 
 # update docker-compose file
 echo "Preparing the docker-compose file"
