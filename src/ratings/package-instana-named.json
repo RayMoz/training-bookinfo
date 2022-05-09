@@ -1,5 +1,5 @@
 {
-  "name": "{my-name} Ratings",
+  "name": "{my-name}-ratings",
   "version": "1.0.0",
   "description": "ratings REST API",
   "scripts": {
