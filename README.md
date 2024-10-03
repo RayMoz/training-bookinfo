@@ -1,38 +1,43 @@
 # training-bookinfo
-This repository was created to accompany the Instana education. It provides a small µ-service based demo app to be installed and configured for Instana observability.
+This repository was branched to accompany courses from the Observability Heroes community (https://observability.mn.co). It provides a small µ-service based demo app to be installed and configured for observability with OpenTelemetry (OTel).
 
 # Bookinfo Training Setup
-Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn Instana agent setup and basic troubleshooting.
+Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn OTel agent setup and basic troubleshooting.
 It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
 
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
 The latter is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
 
-When you follow it step by step you'll be facing situations which are typical for an initial agent deployment of Instana; e.g. a MySQL DB which needs extra credentials or a node.js process which needs attention before it is fully traced.
+When you follow it step by step you'll be facing situations which are typical for an initial deployment of OpenTelemtry; e.g. your apps need to be setup correctly with a env variable more, a MySQL DB (can we monitor that at all with OTel) which needs extra credentials or a node.js process which needs attention before it is fully traced.
 
 ## Machine
 
-Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example cx2-2x4 profile in IBM Cloud VPC or a t3 medium box in AWS EC2. You can also easily use a local VM running on your workstation (rememeber to setup Internet connectivity).
+Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example t3 medium box in AWS EC2. You can also easily use a local VM running on your workstation (rememeber to setup Internet connectivity).
 
-The `apt install` commands that you see throughout hints that this was developed on an Ubuntu system.
+The `yum install` commands that you see throughout hints that this was developed on an RedHat/Amazon Linux system.
 
 ## The setup
 
-Make sure docker is installed. Find the docs and the convenience script here: https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
-Check that you are in the right section for your Linux distro of choice.
+Make sure docker and docker-compose are installed.
 
-Also install `docker-compose`
+```bash
+sudo yum install docker
 
-```yaml
-apt install docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+sudo systemctl start docker
+```
+And the same for **git**
+
+```bash
+yum install git
 ```
 
-Clone the repo
-
-```yaml
-git clone https://github.com/RayMoz/training-bookinfo.git
+Now clone the "otel" branch of the repo training-bookinfo repo
+```bash
+git clone -b otel https://github.com/RayMoz/training-bookinfo
 ```
-
 Go to the bookinfo sample
 
 ```yaml
@@ -103,7 +108,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -114,7 +119,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -125,7 +130,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -166,11 +171,6 @@ sudo docker run \
    --privileged \
    --net=host \
    --pid=host \
-   --env="INSTANA_AGENT_ENDPOINT=ingress-green-saas.instana.io" \
-   --env="INSTANA_AGENT_ENDPOINT_PORT=443" \
-   --env="INSTANA_AGENT_KEY={your agent key}" \
-   --env="INSTANA_DOWNLOAD_KEY={your agent key}" \
-   --env="INSTANA_AGENT_ZONE=myzone" \
    icr.io/instana/agent
 ```
 
@@ -253,7 +253,7 @@ ratings:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3

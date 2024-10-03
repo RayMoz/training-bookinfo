@@ -1,3 +1,5 @@
+Probaby not necessary - none of this applies to OTel
+
 # training-bookinfo - Custom service setup and application perspectives
 How to customize the Instana experience
 

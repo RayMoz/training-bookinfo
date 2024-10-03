@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM node:12.18.1-slim
+FROM node:18.20.4-slim
 
 COPY package.json /opt/microservices/
 COPY ratings.js /opt/microservices/
