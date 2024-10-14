@@ -20,6 +20,7 @@ COPY ./servers/LibertyProjectServer /opt/ibm/wlp/usr/servers/defaultServer/
 
 RUN /opt/ibm/wlp/bin/installUtility install  --acceptLicense /opt/ibm/wlp/usr/servers/defaultServer/server.xml && \
     chmod -R g=rwx /opt/ibm/wlp/output/defaultServer/
+RUN sh -c 'touch /opt/ibm/wlp/usr/servers/defaultServer/jvm.options'
 
 ARG service_version
 ARG enable_ratings

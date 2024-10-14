@@ -1,4 +1,3 @@
-version: '3'
 services:
   productpage:
     image: ${REPO}/examples-bookinfo-productpage-v1:latest
@@ -20,6 +19,8 @@ services:
     image: ${REPO}/examples-bookinfo-mysqldb:latest
     cap_add:
       - NET_ADMIN
+    volumes:
+      - ./src/mysql/mysql_data:/var/lib/mysql
     networks:
       - bookinfo-network
     environment:
@@ -49,8 +50,15 @@ services:
       <<: *logging
   reviews:
     image: ${REPO}/examples-bookinfo-reviews-v3:latest
+    # needs javaagent.jar copied into /opt/ibm/wlp/usr/shared/apps
+    # options in jvm.options into /opt/ibm/wlp/usr/servers/defaultServer/
+    # OTel stuff is in src/reviews/otel
+    volumes:
+      - /Users/Rainer/GitHub/training-bookinfo/src/reviews/otel/jvm.options:/opt/ibm/wlp/usr/servers/defaultServer/jvm.options
+      - /Users/Rainer/GitHub/training-bookinfo/src/reviews/otel/opentelemetry-javaagent.jar:/opt/ibm/wlp/usr/shared/apps/opentelemetry-javaagent.jar
     networks:
       - bookinfo-network
+  
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
@@ -58,6 +66,9 @@ services:
       retries: 3
     logging:
       <<: *logging
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+
   details:
     image: ${REPO}/examples-bookinfo-details-v1:latest
     networks:

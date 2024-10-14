@@ -12,8 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM mysql:5.7.6
+FROM mysql:5.7.9
 # Version needed for Instana agent 
 # MYSQL_ROOT_PASSWORD must be supplied as an env var
 
-COPY ./mysqldb-init.sql /docker-entrypoint-initdb.d
+COPY ./mysqldb-init.sql /docker-entrypoint-initdb.d/

@@ -1,0 +1,83 @@
+services:
+  productpage:
+    image: ${REPO}/examples-bookinfo-productpage-v1:latest
+    networks:
+      - bookinfo-network
+    healthcheck:
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
+      interval: 1s
+      timeout: 10s
+      retries: 3
+    logging: &logging
+      driver: "json-file"
+      options:
+        max-size: "25m"
+        max-file: "2"
+    ports:
+      - "9080:9080"
+  mysqldb:
+    image: ${REPO}/examples-bookinfo-mysqldb:latest
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./src/mysql/mysql_data:/var/lib/mysql
+    networks:
+      - bookinfo-network
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    logging:
+      <<: *logging
+  ratings:
+    image: ${REPO}/examples-bookinfo-ratings-v2:latest
+    environment:
+      SERVICE_VERSION: v2
+      DB_TYPE: mysql
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_PORT: 3306
+      MYSQL_DB_USER: root
+      MYSQL_DB_PASSWORD: password
+      HOST_IP: 172.19.0.1
+    depends_on:
+      - mysqldb
+    networks:
+      - bookinfo-network
+    healthcheck:
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
+      interval: 1s
+      timeout: 10s
+      retries: 3
+    logging:
+      <<: *logging
+  reviews:
+    image: ${REPO}/examples-bookinfo-reviews-v3:latest
+    # needs javaagent.jar copied into /opt/ibm/wlp/usr/shared/apps
+    # options in jvm.options into /opt/ibm/wlp/usr/servers/defaultServer/
+    # OTel stuff is in src/reviews/otel
+    networks:
+      - bookinfo-network
+    volumes:
+      - ./reviews/otel/opentelemetry-javaagent.jar:/opt/ibm/wlp/usr/shared/apps/opentelemetry-java
+      - ./reviews/otel/jvm.options:/opt/ibm/wlp/usr/servers/defaultServer/jvm.options
+    healthcheck:
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
+      interval: 1s
+      timeout: 10s
+      retries: 3
+    logging:
+      <<: *logging
+    extra_hosts:
+      - "host.docker.internal:172.31.0.1"
+  details:
+    image: ${REPO}/examples-bookinfo-details-v1:latest
+    networks:
+      - bookinfo-network
+    healthcheck:
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
+      interval: 1s
+      timeout: 10s
+      retries: 3
+    logging:
+      <<: *logging
+
+networks:
+  bookinfo-network:

@@ -1,11 +1,10 @@
-version: '3'
 services:
   productpage:
     image: ${REPO}/examples-bookinfo-productpage-v1:latest
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -20,6 +19,8 @@ services:
     image: ${REPO}/examples-bookinfo-mysqldb:latest
     cap_add:
       - NET_ADMIN
+    volumes:
+      - ./src/mysql/mysql_data:/var/lib/mysql
     networks:
       - bookinfo-network
     environment:
@@ -41,7 +42,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -52,7 +53,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3
@@ -63,7 +64,7 @@ services:
     networks:
       - bookinfo-network
     healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
+      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 1s
       timeout: 10s
       retries: 3

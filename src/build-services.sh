@@ -68,6 +68,3 @@ pushd "$SCRIPTDIR/mysql"
   docker build --pull -t "${PREFIX}/examples-bookinfo-mysqldb:${VERSION}" -t "${PREFIX}/examples-bookinfo-mysqldb:latest" .
 popd
 
-#pushd "$SCRIPTDIR/mongodb"
-#  docker build --pull -t "${PREFIX}/examples-bookinfo-mongodb:${VERSION}" -t "${PREFIX}/examples-bookinfo-mongodb:latest" .
-#popd
