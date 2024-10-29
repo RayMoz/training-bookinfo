@@ -156,26 +156,11 @@ No need to change the ratings.js file though :-)
 
 Ruby has no Zero-code instrumentation, which means we need to add it manually in the code. Our app is a standard REST service based on the Sinatra framework. It is supported and it is easy to trace it with OpenTelemetry.
 
+TODO: Gemfile
+TODO: RUN directives
+
+Finishing touches missing, coming in the next 24 hours - You can check out for yourself how the Ruby stuff works. It is already in the Dockerfiles, etc. Onyl the description here is missing.
 
 
-Ruby needs an Instana gem to be installed for the full tracing capability. 2 Changes are required.
-1. Add the gem to the runtime by adding the RUN command in the Dockerfile
-2. Add the require statement to the Ruby file (in this case details.rb)
-
-```docker
-# add after the WORKDIR directive
-RUN gem install instana
-```
-
-Add require statement to details.rb
-
-```ruby
-require 'sinatra'
-require 'instana' # new to include the tracing
-```
-After applying those changes you need to rebuild container and start it again. Give it a new version tag (e.g. 1.0.1) and also a latest tag.
-Then run docker-compose again.
-
-Et voilá - we see the Ruby info and traces.
 
 
