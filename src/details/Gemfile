@@ -1,0 +1,11 @@
+source "https://rubygems.org"
+
+gem "sinatra", "~> 2.0"
+gem 'rackup', "~> 1.0.1"
+gem "faraday", "~> 0.16.1"
+gem "opentelemetry-api"
+gem "opentelemetry-common"
+gem "opentelemetry-sdk"
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-all'
+gem "puma"

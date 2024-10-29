@@ -1,4 +1,1 @@
 -javaagent:/opt/ibm/wlp/usr/shared/apps/opentelemetry-javaagent.jar
--Dotel.service.name=reviews
--Dotel.traces.exporter=otlp
--Dotel.exporter.otlp.endpoint=http://otel-collector:4318

@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM ruby:2.7
+FROM ruby:3.3
 
 COPY details.rb /opt/microservices/
 
@@ -25,7 +25,5 @@ EXPOSE 9080
 WORKDIR /opt/microservices
 
 RUN gem install sinatra
-# remove the comment to load the instana gem
-# RUN gem install instana
 
 CMD ["ruby", "details.rb"]

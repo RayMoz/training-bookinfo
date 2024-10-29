@@ -5,7 +5,7 @@ services:
       - bookinfo-network
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
+      interval: 10s
       timeout: 10s
       retries: 3
     logging: &logging
@@ -43,7 +43,7 @@ services:
       - bookinfo-network
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
+      interval: 10s
       timeout: 10s
       retries: 3
     logging:
@@ -54,7 +54,7 @@ services:
       - bookinfo-network
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
+      interval: 10s
       timeout: 10s
       retries: 3
     logging:
@@ -65,7 +65,7 @@ services:
       - bookinfo-network
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
+      interval: 10s
       timeout: 10s
       retries: 3
     logging:

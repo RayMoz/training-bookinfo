@@ -16,20 +16,19 @@ PREFIX=$1
 # The Ruby part
 echo "Preparing Ruby"
 cd ../src/details
-cp details-instana.rb details.rb
-cp Dockerfile-instana Dockerfile
+cp details-otel.rb details.rb
+cp Dockerfile-otel Dockerfile
 
 # Python
 echo "Preparing Python"
 cd ../productpage
-cp requirements-instana.txt requirements.txt
-cp Dockerfile-instana Dockerfile
+cp requirements-otel.txt requirements.txt
+cp Dockerfile-otel Dockerfile
 
 # node.js
 echo "Preparing node.js"
 cd ../ratings
-cp package-instana.json package.json
-cp ratings-instana.js ratings.js
+cp Dockerfile-otel Dockerfile
 
 # build containers
 echo "Building containers"
@@ -39,15 +38,15 @@ cd ..
 # update docker-compose file
 echo "Updating docker-compose file"
 cd ..
-cp docker-compose-instana.yaml docker-compose.yaml
+cp docker-compose-otel.yaml docker-compose.yaml
 
 ## create new .env file with the tag and the prefix given here
-echo "Updating .env file"
-cat <<EOF > .env
+# echo "Updating .env file"
+# cat <<EOF > .env
 # environment file for docker-compose
-REPO=${PREFIX}
-TAG=1.0
-EOF
+# REPO=${PREFIX}
+#TAG=1.0
+# EOF
 
 # start up everything
 docker-compose up -d

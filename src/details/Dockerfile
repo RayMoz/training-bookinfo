@@ -12,21 +12,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM ruby:2.7
+FROM ruby:3.3
 
 COPY details.rb /opt/microservices/
+COPY Gemfile ./
 
 ARG service_version
 ENV SERVICE_VERSION ${service_version:-v1}
-ARG enable_external_book_service
-ENV ENABLE_EXTERNAL_BOOK_SERVICE ${enable_external_book_service:-false}
+RUN bundle install
 
 EXPOSE 9080
 WORKDIR /opt/microservices
-
-RUN gem install rackup
-RUN gem install sinatra
-# remove the comment to load the instana gem
-# RUN gem install instana
 
 CMD ["ruby", "details.rb"]

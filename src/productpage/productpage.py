@@ -18,7 +18,7 @@
 from __future__ import print_function
 from flask_bootstrap import Bootstrap
 from flask import Flask, request, session, render_template, redirect, url_for
-from flask import _request_ctx_stack as stack
+# from flask import _request_ctx_stack as stack
 import simplejson as json
 import requests
 import sys
@@ -193,6 +193,8 @@ def getForwardHeaders(request):
 
 # The UI:
 @app.route('/')
+def hello():
+    return redirect(url_for('index'))
 @app.route('/index.html')
 def index():
     """ Display productpage with normal user and test user buttons"""
@@ -378,6 +380,6 @@ if __name__ == '__main__':
     logging.info("start at port %s" % (p))
     # Make it compatible with IPv6 if Linux
     if sys.platform == "linux":
-        app.run(host='::', port=p, debug=True, threaded=True)
+        app.run(host='::', port=p, debug=False, threaded=True)
     else:
-        app.run(host='0.0.0.0', port=p, debug=True, threaded=True)
+        app.run(host='0.0.0.0', port=p, debug=False, threaded=True)

@@ -17,10 +17,10 @@
 # Additions very welcome
 
 require 'sinatra'
-# remove the comment to enable instana tracing and monitoring
-# require 'instana'
+require 'json'
+require 'net/http'
 
-# needed for the docker image to bind to any IP address not onyl 127.0.0.1
+# needed for the docker image to bind to any IP address not only 127.0.0.1
 set :bind, '0.0.0.0'
 set :port, 9080
 
@@ -56,4 +56,54 @@ def get_book_details(id)
         'ISBN-10' => '1234567890',
         'ISBN-13' => '123-1234567890'
     }
+end
+
+def fetch_details_from_external_service(isbn, id)
+  uri = URI.parse('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)
+  http = Net::HTTP.new(uri.host, ENV['DO_NOT_ENCRYPT'] === 'true' ? 80:443)
+  http.read_timeout = 5 # seconds
+
+  # DO_NOT_ENCRYPT is used to configure the details service to use either
+  # HTTP (true) or HTTPS (false, default) when calling the external service to
+  # retrieve the book information.
+  #
+  # Unless this environment variable is set to true, the app will use TLS (HTTPS)
+  # to access external services.
+  unless ENV['DO_NOT_ENCRYPT'] === 'true' then
+    http.use_ssl = true
+  end
+
+  request = Net::HTTP::Get.new(uri.request_uri)
+  # headers.each { |header, value| request[header] = value }
+
+  response = http.request(request)
+
+  json = JSON.parse(response.body)
+  book = json['items'][0]['volumeInfo']
+
+  language = book['language'] === 'en'? 'English' : 'unknown'
+  type = book['printType'] === 'BOOK'? 'paperback' : 'unknown'
+  isbn10 = get_isbn(book, 'ISBN_10')
+  isbn13 = get_isbn(book, 'ISBN_13')
+
+  return {
+      'id' => id,
+      'author': book['authors'][0],
+      'year': book['publishedDate'],
+      'type' => type,
+      'pages' => book['pageCount'],
+      'publisher' => book['publisher'],
+      'language' => language,
+      'ISBN-10' => isbn10,
+      'ISBN-13' => isbn13
+}
+
+end
+
+def get_isbn(book, isbn_type)
+  isbn_dentifiers = book['industryIdentifiers'].select do |identifier|
+    identifier['type'] === isbn_type
+  end
+
+  return isbn_dentifiers[0]['identifier']
 end

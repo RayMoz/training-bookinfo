@@ -3,18 +3,20 @@ This repository was branched to accompany courses from the Observability Heroes 
 
 # Bookinfo Training Setup
 Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn OTel agent setup and basic troubleshooting.
-It is a nice microservice app which uses Java, Ruby, Python, node.js, MongoDB and MySQL.
+It is a nice microservice app which uses Java, Ruby, Python, node.js and MySQL.
 
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
-The latter is ideal to create a situation that we have usually at customers. A relative easy docker agent installation but we have some holes likes node.js instrumentation, Python instrumentation, Ruby as well and MySQL asking for credentials.
+The latter is ideal to create a situation that allows us to practice the setup of OTel agents for different languages. Java, Python and node.js are autoinstrumented and Ruby is supported though needs a code change to work.
 
-When you follow it step by step you'll be facing situations which are typical for an initial deployment of OpenTelemtry; e.g. your apps need to be setup correctly with a env variable more, a MySQL DB (can we monitor that at all with OTel) which needs extra credentials or a node.js process which needs attention before it is fully traced.
+When you follow it step by step you'll be facing situations which are typical for an initial deployment of OpenTelemtry; e.g. your apps need to be setup correctly with a env variable more, a MySQL DB (can we monitor that at all with OTel?) which needs extra credentials or a Ruby app which needs attention before it is fully traced.
 
 ## Machine
 
-Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example t3 medium box in AWS EC2. You can also easily use a local VM running on your workstation (rememeber to setup Internet connectivity).
+Any Linux box with 2 CPU cores, 4 GB RAM, about 20 GB disk and a decent network connection will do nicely. For example t3 medium box in AWS EC2. You can also easily use a local VM running on your workstation (remember to setup Internet connectivity).
 
 The `yum install` commands that you see throughout hints that this was developed on an RedHat/Amazon Linux system.
+
+I run it also on myl Mac using Docker desktop, which works nicely.
 
 ## The setup
 
@@ -40,13 +42,13 @@ git clone -b otel https://github.com/RayMoz/training-bookinfo
 ```
 Go to the bookinfo sample
 
-```yaml
+```bash
 cd training-bookinfo
 ```
 
 ### Run the build-services script with a repo name and a version tag
 
-```yaml
+```bash
 cd src
 ./build-services.sh 1.0 {your-name}
 ```
@@ -57,222 +59,104 @@ This will create all the necessary docker images and store them locally.
 Change the repo to the name you picked during the build process, e.g. *your-name*.
 This is important to actually match the image names in the docker-compose file with the names of the images you just created.
 
-```yaml
+```bash
 cd ..
 vi .env
 ```
 ### Start up the app
 The docker-compose.yaml is ready to start. When using docker-compose it will read the .env file automatically using the correct images.
 
-```yaml
-version: '3'
-services:
-  productpage:
-    image: ${REPO}/examples-bookinfo-productpage-v1:latest
-    networks:
-      - bookinfo-network
-    healthcheck:
-      test: [ "CMD", "curl", "-H", "X-INSTANA-SYNTHETIC: 1", "-f", "http://localhost:9080/health" ]
-      interval: 1s
-      timeout: 10s
-      retries: 3
-    logging: &logging
-      driver: "json-file"
-      options:
-        max-size: "25m"
-        max-file: "2"
-    ports:
-      - "9080:9080"
-  mysqldb:
-    image: ${REPO}/examples-bookinfo-mysqldb:latest
-    cap_add:
-      - NET_ADMIN
-    networks:
-      - bookinfo-network
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-    logging:
-      <<: *logging
-  ratings:
-    image: ${REPO}/examples-bookinfo-ratings-v2:latest
-    environment:
-      SERVICE_VERSION: v2
-      DB_TYPE: mysql
-      MYSQL_DB_HOST: mysqldb
-      MYSQL_DB_PORT: 3306
-      MYSQL_DB_USER: root
-      MYSQL_DB_PASSWORD: password
-      HOST_IP: 172.19.0.1
-    depends_on:
-      - mysqldb
-    networks:
-      - bookinfo-network
-    healthcheck:
-      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
-      timeout: 10s
-      retries: 3
-    logging:
-      <<: *logging
-  reviews:
-    image: ${REPO}/examples-bookinfo-reviews-v3:latest
-    networks:
-      - bookinfo-network
-    healthcheck:
-      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
-      timeout: 10s
-      retries: 3
-    logging:
-      <<: *logging
-  details:
-    image: ${REPO}/examples-bookinfo-details-v1:latest
-    networks:
-      - bookinfo-network
-    healthcheck:
-      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
-      timeout: 10s
-      retries: 3
-    logging:
-      <<: *logging
-
-networks:
-  bookinfo-network:
-```
-
 Now you can fire up the app with
 
-```yaml
+```bash
 docker-compose up
 ```
 or in detached mode to get back to the prompt
 
-```yaml
+```bash
 docker-compose up -d
 ```
 
 You can reach the bookinfo app now with **http://{hostname}:9080**
 
-### Install Instana agent as docker container
+### Check the OTel collector on your machine
 
-Just use the docker run command from the Instana instance “deploy agents” wizard
-When you use a personal ZONE attribute (just enter it in the field in the wizard) it makes it easier for you to find your machine in the Instana UI.
+As this is the last part of the Easy Entry course where we already setup a backend for our OTel collector which reads a logfile and gathers hostmetrics we only need to make sure it is up and running. Or set it up on the this machine as well. Follow the instructions in the community course to do so.
+We are now going to pump the traces from our application into it. The only thing we need to add to the collector config is the opensearch as a exporter for traces in the pipeline:
 
-```bash
-sudo docker run \
-   --detach \
-   --name instana-agent \
-   --volume /var/run:/var/run \
-   --volume /run:/run \
-   --volume /dev:/dev:ro \
-   --volume /sys:/sys:ro \
-   --volume /var/log:/var/log:ro \
-   --privileged \
-   --net=host \
-   --pid=host \
-   icr.io/instana/agent
+```yaml
+  pipelines:
+
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp, opensearch]
 ```
 
-### What do we see once the agent is running:
+### Let's start with Java - Reviews app
 
-Host info works fine, containers are discovered, Java app starts reporting nicely (WebSphere Liberty), but we miss info for:
+Java is autoinstrumented, which means we only need to add the javaagent.jar to the java commandline - and add some ENV variables to define the collector endpoint and the servicename, etc. We add this all in the docker-compose file, hence no code to change, no container image to rebuild.
+https://opentelemetry.io/docs/zero-code/java/
 
-- Python app
-- node.js app
-- Ruby app
-- MySQL
+What we need to do here is to download the javaagent.jar from the OTel downloadpage (see the Zero-code Java doc), copy it into the docker container image and then add it to the jvm.options file that our application server (WebSphere Liberty) uses.
+We do both during the docker-compose start, hence nothing to do in the docker image. 
 
-The UI gives us already links to the troubleshooting section what we need to do.
+You can use the opentelemetry-javaagent.jar which is in this Git repo, but ideally you download the latest version and replace the one already sitting there. 
 
-So we need to do some adjusting to get the full tracing experience.
-
-### Python app
-
-There is already info about the Python process but maybe no tracing yet.
-In order to turn this on we can simply set an environment variable:
-***AUTOWRAPT_BOOTSTRAP=instana***
-Documentation: https://www.ibm.com/docs/en/obi/current?topic=technologies-monitoring-python-instana-python-package#manual-installation
-
-We set this in the Dockerfile, rebuild the container and then start it up again using docker-compose. This will only affect the changed components. No need to shut everything down before.
-
-```bash
-docker-compose up -d
+The only important change you need to make is to replace the paths in the docker-compose file, which mount the jvm.options file and the jar to the container. 
+Due to a limitation in the docker-compose structure the paths have to be absolute and can not be shortcutted. The container simply will not start if you do it any other way - that means you have to replace that path in the docker-compose file that you see here, with the paths on your installation. 
+```yaml
+    volumes:
+      - /home/someone/training-bookinfo/src/reviews/otel/jvm.options:/opt/ibm/wlp/usr/servers/defaultServer/jvm.options
+      - /home/someone/GitHub/training-bookinfo/src/reviews/otel/opentelemetry-javaagent.jar:/opt/ibm/wlp/usr/shared/apps/opentelemetry-javaagent.jar
 ```
+Great. That's it for Java.
+
+### Python app - Productpage
+
+Python is also auto instrumented. It would not need a code change or config change, but we are using Flask and there is an issue with the debug mode as this reloads the app and that will strip the autoinstrumentation. When debug is set to "true", the OTel instrumentation will not work. If you need the debug mode, then you need to disable the reloader like in this code snippet (last lines of the productpage.py)
+
+```python
+if __name__ == "__main__":
+    app.run(port=9080, debug=True, use_reloader=False)
+```
+
+We set this in the productpage.py and we are done. When we build the OTel version together with the other apps with a script and restart with docker-compose
+
 Hint: Do not run the test in the Dockerfile as it expects the opentracing instrumentation.
 
-### node.js
+### node.js app - Ratings
 
-Instana tells us that there is a node process but we need to do some manual work to see the details and traces.
-Here we need to add the instrumentation to the code (one line) and add the package to the package.json file:
+node.js is also auto instrumented, which means it is very low effort to get the agent running.
+Autoinstrumentation works nicely. Just needed to add the following lines to the dockerfile:
+We need the OpenTelemetry API and the auto-instrumentation package for node.
 
-```yaml
-{
-  "scripts": {
-    "start": "node ratings.js"
-  },
-  "dependencies": {
-    "httpdispatcher": "1.0.0",
-    "mongodb": "^3.6.0",
-    "mysql": "^2.15.0",
-    "@instana/collector": "1.139.0"
-  }
-}
+The following additions need to be made in the dockerfile for the ratings app. 
+```bash
+cd ratings
+vi Dockerfile
 ```
-
-```yaml
-require('@instana/collector')();
-
-var http = require('http')
-var dispatcher = require('httpdispatcher')
+Add the following lines just after the initial RUN npm install
+```Dockerfile
+RUN npm install --save @opentelemetry/api
+RUN npm install --save @opentelemetry/auto-instrumentations-node
 ```
-
-rebuild docker container - and restart the app with docker-compose.
-
-**Still not seeing any data: Let’s check the logs of the app (docker logs {container ID})**
-
-Problem is that the sensor can not reach the agent due to IP conflict.
-
-Reason: the HOST_IP is changed in the docker-compose.yaml file and we need to add the default IP in order for the sensor to be able to announce itself in the agent.
-
+And then add the following ENV variables to the docker-compose.yaml to the ratings service
 ```yaml
-ratings:
-    image: ${REPO}/examples-bookinfo-ratings-v2:latest
-    environment:
-      SERVICE_VERSION: v2
-      DB_TYPE: mysql
-      MYSQL_DB_HOST: mysqldb
-      MYSQL_DB_PORT: 3306
-      MYSQL_DB_USER: root
-      MYSQL_DB_PASSWORD: password
-      HOST_IP: 172.19.0.1
-      INSTANA_AGENT_HOST: 172.17.0.1
-      # Default host IP for Linux docker distributions
-    depends_on:
-      - mysqldb
-    networks:
-      - bookinfo-network
-    healthcheck:
-      test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
-      interval: 1s
-      timeout: 10s
-      retries: 3
-    logging:
-      <<: *logging
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_NODE_RESOURCE_DETECTORS: "env,host,os"
+      OTEL_SERVICE_NAME: "ratings"
+      NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
 ```
+Needed to use port 4318 with HTTP, as the GRPC port 4317 didn't work and resulted in HTTP connection errors.
+No need to change the ratings.js file though :-)
 
-Add the INSTANA_AGENT_HOST ENV to the docker-compose.yaml for the ratings service
-172.17.0.1 is the default Docker host IP which we use here.
-Apply the changes by running docker-compose again.
-Now we check if it works by looking into the logs again.
+### Ruby app - Details
 
-After some seconds we can see the message that the sensor is ready and reporting.
+Ruby has no Zero-code instrumentation, which means we need to add it manually in the code. Our app is a standard REST service based on the Sinatra framework. It is supported and it is easy to trace it with OpenTelemetry.
 
-### Ruby app
 
-Our app is a standard REST service based on the Sinatra framework. It is supereasy to *instanafy* it.
-
-For Ruby app we see just the process but no further info at first.
 
 Ruby needs an Instana gem to be installed for the full tracing capability. 2 Changes are required.
 1. Add the gem to the runtime by adding the RUN command in the Dockerfile
@@ -294,39 +178,4 @@ Then run docker-compose again.
 
 Et voilá - we see the Ruby info and traces.
 
-### MySQL - credentials missing
 
-The problem with the MySQL monitoring is in our case, that it is not using the standard root login but has actually a password assigned.
-No problem, we can configure the agent with the MySQL credentials in the *configuration.yaml* file.
-But, wait a second, the agent is running in a container. How can I edit the file? We actually can not edit the standard configuration.yaml.
-But we can copy a configuration file via `docker cp` to the running container.
-Or use a volume mount during container startup, but that requires a complete container restart.
-Here is the content of the file, let's call it *configuration-mysql.yaml*
-
-```yaml
-# Mysql
-com.instana.plugin.mysql:
-  user: 'root'
-  password: 'password'
-```
-Now let's use the `docker cp`
-```bash
-docker cp configuration-mysql.yaml {container-id}:/opt/instana/agent/etc/instana/configuration-mysql.yaml
-```
-That's it.
-Look for this line in the agent.log: `Parsed configuration file /opt/instana/agent/etc/instana/configuration-mysql.yaml`
-The file is hot-read and the credentials are applied immediately.
-
-You can also mount the file into the filesystem of the container during container startup.
-The container needs to be completely restarted though which can be timeconsuming.
-
-```bash
---volume {your-local-path}/configuration-mysql.yaml:/opt/instana/agent/etc/instana/configuration-mysql.yaml
-```
-### WebSphere Liberty application server
-This one is automatically found and instrumented at runtime. Though it uses a IBM J9 JVM which usually needs an extra configuration to enable tracing.
-Here is an excerpt of the documentation that explains why this works out of the box:
-
-> Optional: Configure the ws-javaagent.jar file with the -javaagent JVM option. The ws-javaagent.jar file is in the ${wlp.install.dir}/bin/tools directory of the Liberty installation. You are advised to configure the ws-javaagent.jar file, but it is not mandatory unless you use capabilities of the server that require it, such as monitoring or trace. If you contact IBM® support, you might need to provide trace, and if so, you must start the server with the ws-javaagent.jar file, even if you do not normally use it.
-If the server.xml file also has the feature `monitor-1.0` enabled, we can see threadpool info, etc. from this WebSphere Liberty instance.
-https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-embedding-server-in-your-applications
