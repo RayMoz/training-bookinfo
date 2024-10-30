@@ -116,7 +116,9 @@ Great. That's it for Java.
 
 ### Python app - Productpage
 
-Python is also auto instrumented. It would not need a code change or config change, but we are using Flask and there is an issue with the debug mode as this reloads the app and that will strip the autoinstrumentation. When debug is set to "true", the OTel instrumentation will not work. If you need the debug mode, then you need to disable the reloader like in this code snippet (last lines of the productpage.py)
+Python is also auto instrumented. https://opentelemetry.io/docs/zero-code/python/
+
+It would normally, not need a code or config change, but we are using Flask and there is an issue with the debug mode as this reloads the app and that will strip the autoinstrumentation. When debug is set to "true", the OTel instrumentation will not work. If you need the debug mode, then you need to disable the reloader like in this code snippet (last lines of the productpage.py)
 
 ```python
 if __name__ == "__main__":
@@ -129,7 +131,8 @@ Hint: Do not run the test in the Dockerfile as it expects the opentracing instru
 
 ### node.js app - Ratings
 
-node.js is also auto instrumented, which means it is very low effort to get the agent running.
+node.js is also auto instrumented, which means it is very low effort to get the agent running. https://opentelemetry.io/docs/zero-code/js/
+
 Autoinstrumentation works nicely. Just needed to add the following lines to the dockerfile:
 We need the OpenTelemetry API and the auto-instrumentation package for node.
 
@@ -156,7 +159,9 @@ No need to change the ratings.js file though :-)
 
 ### Ruby app - Details
 
-Ruby has no Zero-code instrumentation, which means we need to add it manually in the code. Our app is a standard REST service based on the Sinatra framework. It is supported and it is easy to trace it with OpenTelemetry.
+Ruby has no Zero-code instrumentation, which means we need to add it manually in the code.
+https://opentelemetry.io/docs/languages/ruby/
+Our app is a standard REST service based on the Sinatra framework. It is supported and it is easy to trace it with OpenTelemetry.
 
 To enable the tracing we need to add a couple of components. 
 #### The Gemfile
