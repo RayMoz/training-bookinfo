@@ -18,8 +18,6 @@ COPY package.json /opt/microservices/
 COPY ratings.js /opt/microservices/
 WORKDIR /opt/microservices
 RUN npm install
-RUN npm install --save @opentelemetry/api
-RUN npm install --save @opentelemetry/auto-instrumentations-node
 
 #hadolint ignore=DL3008
 RUN apt-get update \

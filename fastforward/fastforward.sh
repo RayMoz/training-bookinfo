@@ -41,12 +41,14 @@ cd ..
 cp docker-compose-otel.yaml docker-compose.yaml
 
 ## create new .env file with the tag and the prefix given here
-# echo "Updating .env file"
-# cat <<EOF > .env
-# environment file for docker-compose
-# REPO=${PREFIX}
-#TAG=1.0
-# EOF
+echo "Updating .env file"
+cat <<EOF > .env
+#environment file for docker-compose
+REPO=${PREFIX}
+TAG=1.1
+BACKEND=hostname
+COLLECTOR_ENDPOINT=http://otel-collector
+EOF
 
 # start up everything
 docker-compose up -d

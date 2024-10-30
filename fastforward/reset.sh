@@ -28,7 +28,7 @@ cp Dockerfile-base Dockerfile
 echo "Reseting node.js"
 cd ../ratings
 cp package-base.json package.json
-cp ratings-base.js ratings.js
+cp Dockerfile-base Dockerfile
 
 # build containers
 echo "Rebuilding containers"
@@ -39,6 +39,16 @@ cd ..
 echo "Preparing the docker-compose file"
 cd ..
 cp docker-compose-base.yaml docker-compose.yaml
+
+## create new .env file with the tag and the prefix given here
+echo "Updating .env file"
+cat <<EOF > .env
+# environment file for docker-compose
+REPO=${PREFIX}
+TAG=1.0
+BACKEND=hostname
+COLLECTOR_ENDPOINT=http://otel-collector
+EOF
 
 # start up everything again
 echo "Starting the show"

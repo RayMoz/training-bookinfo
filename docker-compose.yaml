@@ -1,6 +1,6 @@
 services:
   productpage:
-    image: ${REPO}/examples-bookinfo-productpage-v1:latest
+    image: ${REPO}/examples-bookinfo-productpage-v1:${TAG}
     networks:
       - bookinfo-network
     healthcheck:
@@ -13,13 +13,6 @@ services:
       options:
         max-size: "25m"
         max-file: "2"
-    environment:
-      OTEL_SERVICE_NAME: "productpage"
-      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
-      OTEL_TRACES_EXPORTER: "console,otlp"
-      OTEL_METRICS_EXPORTER: "console,otlp"
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${COLLECTOR_ENDPOINT}:4317 
-      OTEL_LOG_LEVEL: DEBUG
     ports:
       - "9080:9080"
   mysqldb:
@@ -35,7 +28,7 @@ services:
     logging:
       <<: *logging
   ratings:
-    image: ${REPO}/examples-bookinfo-ratings-v2:latest
+    image: ${REPO}/examples-bookinfo-ratings-v2:${TAG}
     environment:
       SERVICE_VERSION: v2
       DB_TYPE: mysql
@@ -44,12 +37,6 @@ services:
       MYSQL_DB_USER: root
       MYSQL_DB_PASSWORD: password
       HOST_IP: 172.19.0.1
-      OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
-      OTEL_NODE_RESOURCE_DETECTORS: "env,host,os"
-      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
-      OTEL_SERVICE_NAME: "ratings"
-      NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
     depends_on:
       - mysqldb
     networks:
@@ -62,15 +49,9 @@ services:
     logging:
       <<: *logging
   reviews:
-    image: ${REPO}/examples-bookinfo-reviews-v3:latest
-    # needs javaagent.jar copied into /opt/ibm/wlp/usr/shared/apps
-    # options in jvm.options into /opt/ibm/wlp/usr/servers/defaultServer/
-    # OTel stuff is in src/reviews/otel
+    image: ${REPO}/examples-bookinfo-reviews-v3:${TAG}
     networks:
       - bookinfo-network
-    volumes:
-      - /Users/Rainer/GitHub/training-bookinfo/src/reviews/otel/jvm.options:/opt/ibm/wlp/usr/servers/defaultServer/jvm.options
-      - /Users/Rainer/GitHub/training-bookinfo/src/reviews/otel/opentelemetry-javaagent.jar:/opt/ibm/wlp/usr/shared/apps/opentelemetry-javaagent.jar
     healthcheck:
       test: [ "CMD", "curl", "-H", "-f", "http://localhost:9080/health" ]
       interval: 10s
@@ -78,15 +59,8 @@ services:
       retries: 3
     logging:
       <<: *logging
-    environment:
-      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
-      OTEL_SERVICE_NAME: "reviews"
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
-    extra_hosts:
-      - "host.docker.internal:172.31.0.1"
   details:
-    image: ${REPO}/examples-bookinfo-details-v1:latest
+    image: ${REPO}/examples-bookinfo-details-v1:${TAG}
     networks:
       - bookinfo-network
     healthcheck:
@@ -94,11 +68,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-    environment:
-      ENABLE_EXTERNAL_BOOK_SERVICE: "true"
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
-      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
     logging:
       <<: *logging
 

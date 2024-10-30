@@ -1,6 +1,6 @@
 services:
   productpage:
-    image: ${REPO}/examples-bookinfo-productpage-v1:latest
+    image: ${REPO}/examples-bookinfo-productpage-v1:${TAG}
     networks:
       - bookinfo-network
     healthcheck:
@@ -28,7 +28,7 @@ services:
     logging:
       <<: *logging
   ratings:
-    image: ${REPO}/examples-bookinfo-ratings-v2:latest
+    image: ${REPO}/examples-bookinfo-ratings-v2:${TAG}
     environment:
       SERVICE_VERSION: v2
       DB_TYPE: mysql
@@ -49,7 +49,7 @@ services:
     logging:
       <<: *logging
   reviews:
-    image: ${REPO}/examples-bookinfo-reviews-v3:latest
+    image: ${REPO}/examples-bookinfo-reviews-v3:${TAG}
     networks:
       - bookinfo-network
     healthcheck:
@@ -60,7 +60,7 @@ services:
     logging:
       <<: *logging
   details:
-    image: ${REPO}/examples-bookinfo-details-v1:latest
+    image: ${REPO}/examples-bookinfo-details-v1:${TAG}
     networks:
       - bookinfo-network
     healthcheck:

@@ -25,5 +25,6 @@ EXPOSE 9080
 WORKDIR /opt/microservices
 
 RUN gem install sinatra
+RUN gem install rackup
 
 CMD ["ruby", "details.rb"]
