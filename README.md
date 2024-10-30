@@ -5,6 +5,8 @@ This repository was branched to accompany courses from the Observability Heroes 
 Originally used to demo and test Istio service meshes, the bookinfo app is ideal to learn OTel agent setup and basic troubleshooting.
 It is a nice microservice app which uses Java, Ruby, Python, node.js and MySQL.
 
+![Graphic of the app architecture](https://istio.io/latest/docs/examples/bookinfo/noistio.svg)
+
 It is meant to serve as an example for servicemeshing with Istio, but you can run it also just with a plain docker / docker-compose setup.
 The latter is ideal to create a situation that allows us to practice the setup of OTel agents for different languages. Java, Python and node.js are autoinstrumented and Ruby is supported though needs a code change to work.
 
