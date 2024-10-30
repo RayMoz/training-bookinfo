@@ -156,10 +156,74 @@ No need to change the ratings.js file though :-)
 
 Ruby has no Zero-code instrumentation, which means we need to add it manually in the code. Our app is a standard REST service based on the Sinatra framework. It is supported and it is easy to trace it with OpenTelemetry.
 
-TODO: Gemfile
-TODO: RUN directives
+To enable the tracing we need to add a couple of components. 
+#### The Gemfile
+Packages in Ruby are organized in Gems and you can give your app a list of gems to load when starting up. 
+To get started with OTel in Ruby we need to add the following lines to the Gemfile
 
-Finishing touches missing, coming in the next 24 hours - You can check out for yourself how the Ruby stuff works. It is already in the Dockerfiles, etc. Onyl the description here is missing.
+```gemfile
+gem "opentelemetry-api"
+gem "opentelemetry-common"
+gem "opentelemetry-sdk"
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-all'
+```
+In the Dockerfile we then copy it into the container and later run the installer which checks for a Gemfile (it has to have that name with a capital G) and installs all the gems listed in there.
+
+```Dockerfile
+COPY Gemfile ./
+## some other lines
+RUN bundle install
+```
+So far so good, next step is to actually run OTel. This need some additions to the actual Ruby script. Add those lines right after the intial "require" statements. That's it. You notice that we are already setting the service.name here. You can do this via ENV of course as well.
+```ruby
+require 'opentelemetry/sdk'
+require 'opentelemetry/exporter/otlp'
+require 'opentelemetry/instrumentation/all'
+
+# configure SDK with defaults
+OpenTelemetry::SDK.configure do |c|
+  c.service_name = 'details'
+  c.use_all() # enables all instrumentation!
+end
+```
+
+The rest is done via ENV variables in the docker-compose.yml file. The first variable tell the service to get the details via API from Amazon.
+```yaml
+    environment:
+      ENABLE_EXTERNAL_BOOK_SERVICE: "true"
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
+      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
+```
+### Build the new containers and run
+Last step is to actually build the containers and run the new, now instrumented, version.
+
+To be able to go back and forth between instrumented and plain code, we give it a new version tag (1.1).
+```bash
+cd src
+./build-services.sh 1.1 {your-repo-name}
+```
+Before we run docker-compose we need to adjust the version in the .env file to reflect the new version.
+```txt
+TAG=1.1
+```
+And the run it.
+```bash
+docker-compose up -d
+```
+Voilá, there it is and now we can check if the data actually reaches the collector. Ideally in our backend system by taking a look at Grafana and explore the traces with Jaeger. 
+
+### Cheat - fastforward
+If you are in a hurry and like to see the result quickly, you can use the fastforward script, which does all the work for you.
+Just run the script
+```bash
+cd fastforward
+./fastforward.sh {your-repo-name}
+```
+Once you are happy and see that it works, the reset.sh script will take the changes back and you can try it again on your own. 
+
+Enjoy OpenTelemetry
 
 
 

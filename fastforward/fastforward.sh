@@ -33,7 +33,7 @@ cp Dockerfile-otel Dockerfile
 # build containers
 echo "Building containers"
 cd ..
-./build-services.sh 1.0 ${PREFIX}
+./build-services.sh 1.1 ${PREFIX}
 
 # update docker-compose file
 echo "Updating docker-compose file"
@@ -51,4 +51,4 @@ cp docker-compose-otel.yaml docker-compose.yaml
 # start up everything
 docker-compose up -d
 
-echo "Ready. Done setting up the environment. Please deploy the agent now and then: Have fun configuring the services."
+echo "Ready. Done setting up the environment. Please check in your backend system if that data appears."
