@@ -21,11 +21,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY test-requirements.txt ./
 RUN pip install --no-cache-dir -r test-requirements.txt
 
+#RUN apt-get update -y
+#RUN apt install -y python3-dev
+#RUN apt install -y build-essential
+
 COPY productpage.py /opt/microservices/
 COPY tests/unit/* /opt/microservices/
 COPY templates /opt/microservices/templates
 COPY static /opt/microservices/static
 COPY requirements.txt /opt/microservices/
+
+RUN pip install opentelemetry-distro opentelemetry-exporter-otlp
+RUN opentelemetry-bootstrap -a install
 
 ARG flood_factor
 ENV FLOOD_FACTOR ${flood_factor:-0}
@@ -34,4 +41,4 @@ EXPOSE 9080
 WORKDIR /opt/microservices
 # RUN python -m unittest discover
 
-CMD ["python", "productpage.py", "9080"]
+CMD ["opentelemetry-instrument", "python", "productpage.py", "9080"]

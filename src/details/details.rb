@@ -20,6 +20,16 @@ require 'sinatra'
 require 'json'
 require 'net/http'
 
+require 'opentelemetry/sdk'
+require 'opentelemetry/exporter/otlp'
+require 'opentelemetry/instrumentation/all'
+
+# configure SDK with defaults
+OpenTelemetry::SDK.configure do |c|
+  c.service_name = 'details'
+  c.use_all() # enables all instrumentation!
+end
+
 # needed for the docker image to bind to any IP address not only 127.0.0.1
 set :bind, '0.0.0.0'
 set :port, 9080

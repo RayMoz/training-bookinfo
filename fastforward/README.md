@@ -7,6 +7,6 @@ To automatically apply all the changes necessary for OTel instrumentation simply
 If you then want to remove all the OTel stuff, simply run the reset.sh script
 
 ```bash
-./rest.sh {your-repo-name-as-it-appears-in-the-env-file}
+./reset.sh {your-repo-name-as-it-appears-in-the-env-file}
 ```
 Enjoy
