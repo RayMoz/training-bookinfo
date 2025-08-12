@@ -18,8 +18,10 @@ services:
       OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
       OTEL_TRACES_EXPORTER: "console,otlp"
       OTEL_METRICS_EXPORTER: "console,otlp"
+      OTEL_LOGS_EXPORTER: "console,otlp"
       OTEL_EXPORTER_OTLP_ENDPOINT: ${COLLECTOR_ENDPOINT}:4317 
       OTEL_LOG_LEVEL: DEBUG
+      OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: true
     ports:
       - "9080:9080"
   mysqldb:
@@ -45,8 +47,9 @@ services:
       MYSQL_DB_PASSWORD: password
       HOST_IP: 172.19.0.1
       OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_LOGS_EXPORTER: "otlp"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
-      OTEL_NODE_RESOURCE_DETECTORS: "env,host,os"
+      OTEL_NODE_RESOURCE_DETECTORS: "container,env,host,os"
       OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
       OTEL_SERVICE_NAME: "ratings"
       NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
@@ -82,7 +85,9 @@ services:
       OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"
       OTEL_SERVICE_NAME: "reviews"
       OTEL_TRACES_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318"
+      STAR_COLOR: black
     extra_hosts:
       - "host.docker.internal:172.31.0.1"
   details:
@@ -95,7 +100,7 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      ENABLE_EXTERNAL_BOOK_SERVICE: "true"
+      ENABLE_EXTERNAL_BOOK_SERVICE: "false"
       OTEL_TRACES_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: "${COLLECTOR_ENDPOINT}:4318" 
       OTEL_RESOURCE_ATTRIBUTES: "service.namespace=bookinfo"

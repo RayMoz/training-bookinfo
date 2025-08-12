@@ -1,0 +1,19 @@
+apiVersion: instana.io/v1
+kind: InstanaAgent
+metadata:
+  name: instana-agent
+  namespace: instana-agent
+spec:
+  zone:
+   name: HSH # (optional) name of the zone of the host
+  cluster:
+   name: Bookinfo
+  agent:
+   key: O_xPXPnaToa9ZpkiPG0Elg
+   downloadKey: O_xPXPnaToa9ZpkiPG0Elg
+   endpointHost: ingress-orange-saas.instana.io
+   endpointPort: "443"
+   env: {}
+   configuration_yaml: |
+    # You can leave this empty, or use this to configure your instana agent.
+    # See https://ibm.biz/K8s-agent-administer

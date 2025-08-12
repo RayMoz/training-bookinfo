@@ -26,6 +26,8 @@ from json2html import *
 import logging
 import os
 import asyncio
+from opentelemetry import trace
+
 
 # These two lines enable debugging at httplib level (requests->urllib3->http.client)
 # You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
@@ -312,6 +314,9 @@ def getProducts():
 
 
 def getProduct(product_id):
+    app.logger.info("ProductId: " + str(product_id))
+    current_span = trace.get_current_span()
+    current_span.set_attribute("product.id", str(product_id))
     products = getProducts()
     if product_id + 1 > len(products):
         return None
@@ -348,6 +353,7 @@ def getProductReviews(product_id, headers):
 
 
 def getProductRatings(product_id, headers):
+    app.logger.info("ProductId: " + str(product_id))
     try:
         url = ratings['name'] + "/" + ratings['endpoint'] + "/" + str(product_id)
         res = requests.get(url, headers=headers, timeout=3.0)

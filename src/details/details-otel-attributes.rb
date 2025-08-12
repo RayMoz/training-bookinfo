@@ -1,0 +1,133 @@
+# details.rb
+# Copyright IBM & Istio Authors
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+##############################################################################
+# Very rough implementation of a REST API for demo purposes of Instana tracing
+# Additions very welcome
+
+require 'sinatra'
+require 'json'
+require 'net/http'
+
+require 'opentelemetry/sdk'
+require 'opentelemetry/exporter/otlp'
+require 'opentelemetry/instrumentation/all'
+
+# configure SDK with defaults
+OpenTelemetry::SDK.configure do |c|
+  c.service_name = 'details'
+  c.use_all() # enables all instrumentation!
+end
+MyAppTracer = OpenTelemetry.tracer_provider.tracer('Tracer')
+
+# needed for the docker image to bind to any IP address not only 127.0.0.1
+set :bind, '0.0.0.0'
+set :port, 9080
+
+get '/' do
+  'Awesome!'
+end
+
+get '/details/0' do
+  get_book_details(0).to_json
+end
+
+get '/health' do
+  'I´m healthy!'
+end
+
+
+def get_book_details(id)
+
+  MyAppTracer.in_span(__method__) do |span|
+    # Create a childspan and add attributes
+  current_span = OpenTelemetry::Trace.current_span
+
+  current_span.add_attributes({
+  "book.id" => id,
+  "external.service.enabled" => ENV['ENABLE_EXTERNAL_BOOK_SERVICE']
+  })
+  current_span.add_event("Getting Details")
+    if ENV['ENABLE_EXTERNAL_BOOK_SERVICE'] === 'true' then
+      # the ISBN of one of Comedy of Errors on the Amazon
+      # that has Shakespeare as the single author
+      current_span.add_event("Checking Amazon Books for details")
+        isbn = '0486424618'
+        return fetch_details_from_external_service(isbn, id)
+    end
+    current_span.add_event("Using Local book details")
+    return {
+        'id' => id,
+        'author': 'William Shakespeare',
+        'year': 1595,
+        'type' => 'paperback',
+        'pages' => 200,
+        'publisher' => 'PublisherA',
+        'language' => 'English',
+        'ISBN-10' => '1234567890',
+        'ISBN-13' => '123-1234567890'
+    }
+  end
+
+end
+
+def fetch_details_from_external_service(isbn, id)
+  uri = URI.parse('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)
+  http = Net::HTTP.new(uri.host, ENV['DO_NOT_ENCRYPT'] === 'true' ? 80:443)
+  http.read_timeout = 5 # seconds
+
+  # DO_NOT_ENCRYPT is used to configure the details service to use either
+  # HTTP (true) or HTTPS (false, default) when calling the external service to
+  # retrieve the book information.
+  #
+  # Unless this environment variable is set to true, the app will use TLS (HTTPS)
+  # to access external services.
+  unless ENV['DO_NOT_ENCRYPT'] === 'true' then
+    http.use_ssl = true
+  end
+
+  request = Net::HTTP::Get.new(uri.request_uri)
+  # headers.each { |header, value| request[header] = value }
+
+  response = http.request(request)
+
+  json = JSON.parse(response.body)
+  book = json['items'][0]['volumeInfo']
+
+  language = book['language'] === 'en'? 'English' : 'unknown'
+  type = book['printType'] === 'BOOK'? 'paperback' : 'unknown'
+  isbn10 = get_isbn(book, 'ISBN_10')
+  isbn13 = get_isbn(book, 'ISBN_13')
+
+  return {
+      'id' => id,
+      'author': book['authors'][0],
+      'year': book['publishedDate'],
+      'type' => type,
+      'pages' => book['pageCount'],
+      'publisher' => book['publisher'],
+      'language' => language,
+      'ISBN-10' => isbn10,
+      'ISBN-13' => isbn13
+}
+
+end
+
+def get_isbn(book, isbn_type)
+  isbn_dentifiers = book['industryIdentifiers'].select do |identifier|
+    identifier['type'] === isbn_type
+  end
+
+  return isbn_dentifiers[0]['identifier']
+end

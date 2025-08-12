@@ -1,0 +1,290 @@
+##################################################################################################
+# Productpage service
+##################################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: productpage
+  labels:
+    app: productpage
+    service: productpage
+spec:
+  type: NodePort
+  ports:
+  - port: 9080
+    name: http
+    nodePort: 30000
+  selector:
+    app: productpage
+
+
+##################################################################################################
+# Ratings service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratings
+  labels:
+    app: ratings
+    service: ratings
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: ratings
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-v1
+  labels:
+    app: ratings
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratings
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: ratings
+        version: v1
+    spec:
+
+      containers:
+      - name: ratings
+        image: raymoz-otel/examples-bookinfo-ratings-v2:1.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        env:
+          # ratings-v2 will use mongodb as the default db backend.
+          # if you would like to use mysqldb then you can use this file
+          # which sets DB_TYPE = 'mysql' and the rest of the parameters shown
+          # here and also create the # mysqldb service using bookinfo-mysql.yaml
+          # NOTE: This file is mutually exclusive to bookinfo-ratings-v2.yaml
+          - name: DB_TYPE
+            value: "mysql"
+          - name: MYSQL_DB_HOST
+            value: mysqldb
+          - name: MYSQL_DB_PORT
+            value: "3306"
+          - name: MYSQL_DB_USER
+            value: root
+          - name: MYSQL_DB_PASSWORD
+            value: password
+        ports:
+        - containerPort: 9080
+---
+
+##################################################################################################
+# Reviews service
+# Without any OTel reference
+##################################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: reviews
+  labels:
+    app: reviews
+    service: reviews
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: reviews
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reviews-v3
+  labels:
+    app: reviews
+    version: v3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reviews
+      version: v3
+  template:
+    metadata:
+      labels:
+        app: reviews
+        version: v3
+    spec:
+      containers:
+      - name: reviews
+        image: raymoz-otel/examples-bookinfo-reviews-v3:1.1
+        imagePullPolicy: IfNotPresent
+
+        env:
+        - name: LOG_DIR
+          value: "/tmp/logs"
+        ports:
+        - containerPort: 9080
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: wlp-output
+          mountPath: /opt/ibm/wlp/output
+
+      volumes:
+      - name: wlp-output
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+---
+##################################################################################################
+# Details service
+##################################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: details
+  labels:
+    app: details
+    service: details
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: details
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: details-v1
+  labels:
+    app: details
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: details
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: details
+        version: v1
+    spec:
+      containers:
+      - name: details
+        image: raymoz-otel/examples-bookinfo-details-v1:1.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+---
+##################################################################################################
+# Mysql db services
+# credentials: root/password
+##################################################################################################
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-credentials
+type: Opaque
+data:
+  rootpasswd: cGFzc3dvcmQ=
+  #rootpasswd: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysqldb
+  labels:
+    app: mysqldb
+    service: mysqldb
+spec:
+  ports:
+  - port: 3306
+    name: tcp
+  selector:
+    app: mysqldb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysqldb-v1
+  labels:
+    app: mysqldb
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysqldb
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: mysqldb
+        version: v1
+    spec:
+      containers:
+      - name: mysqldb
+        image: raymoz-otel/examples-bookinfo-mysqldb:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-credentials
+                key: rootpasswd
+        args: ["--default-authentication-plugin","mysql_native_password"]
+        volumeMounts:
+        - name: var-lib-mysql
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: var-lib-mysql
+        emptyDir: {}
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productpage-v1
+  labels:
+    app: productpage
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productpage
+      version: v1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9080"
+        prometheus.io/path: "/metrics"
+      labels:
+        app: productpage
+        version: v1
+    spec:
+      containers:
+      - name: productpage
+        image: raymoz-otel/examples-bookinfo-productpage-v1:1.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
